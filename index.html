@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070b18">
+  <title>Satellite Rescue | Deep Space Mission</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #050a14;
+      color: #eef3ff;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top, rgba(18, 33, 62, .9), transparent 38%),
+        linear-gradient(180deg, #040b14 0%, #040912 100%);
+      color: #eef5ff;
+    }
+
+    .game {
+      width: min(100%, 1320px);
+      position: relative;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 2px 12px;
+      padding: 0 4px;
+    }
+
+    .eyebrow, .label {
+      color: #7fe5da;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(111, 232, 222, .45);
+    }
+
+    h1 {
+      margin: 6px 0 0;
+      font-size: clamp(24px, 3vw, 36px);
+      letter-spacing: -.05em;
+      text-transform: uppercase;
+      color: #dff6ff;
+    }
+
+    .mission-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border: 1px solid rgba(122, 211, 245, .35);
+      border-radius: 999px;
+      background: rgba(11, 20, 33, .72);
+      color: #cfeaff;
+      font-size: 11px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      box-shadow: inset 0 0 0 1px rgba(111, 206, 255, .09), 0 0 22px rgba(30, 152, 221, .12);
+      white-space: nowrap;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #6ae7cb;
+      box-shadow: 0 0 12px #6ae7cb;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: 1.2fr 1.2fr auto auto auto;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding: 0 4px;
+    }
+
+    .meter, .stat {
+      min-height: 54px;
+      padding: 9px 14px 10px;
+      border: 1px solid rgba(131, 206, 255, .34);
+      border-radius: 10px;
+      background: rgba(11, 19, 31, .8);
+      box-shadow: inset 0 0 0 1px rgba(147, 211, 254, .08), 0 0 18px rgba(34, 126, 193, .08);
+    }
+
+    .meter-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .meter-value, .stat-value {
+      color: #ebf6ff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      font-variant-numeric: tabular-nums;
+      text-transform: uppercase;
+    }
+
+    .bar {
+      height: 6px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(28, 48, 65, .95);
+      box-shadow: inset 0 0 8px rgba(6, 11, 18, .8);
+    }
+
+    .bar-fill {
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #52d9cf, #85f0d9);
+      box-shadow: 0 0 16px rgba(103, 234, 219, .55);
+      transition: width .15s linear;
+    }
+
+    .stat { min-width: 110px; }
+    .stat .label { display: block; margin-bottom: 4px; }
+
+    .arena {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(124, 180, 232, .34);
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at center, rgba(9, 16, 30, .4), rgba(4, 9, 18, .96) 60%),
+        #040b15;
+      box-shadow: 0 0 0 1px rgba(83, 143, 196, .18), 0 28px 80px rgba(0, 0, 0, .52), 0 0 32px rgba(69, 125, 184, .08);
+    }
+
+    .mission-banner {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      min-width: min(78%, 630px);
+      padding: 12px 22px;
+      border: 1px solid rgba(246, 177, 72, .9);
+      background: rgba(28, 19, 8, .58);
+      color: #f4d38d;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      box-shadow: inset 0 0 0 1px rgba(245, 176, 70, .14), 0 0 18px rgba(245, 176, 70, .08);
+      backdrop-filter: blur(2px);
+    }
+
+    .arena::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(transparent 0%, rgba(142, 194, 255, .03) 50%, transparent 100%),
+        repeating-linear-gradient(
+          180deg,
+          rgba(255, 255, 255, .02),
+          rgba(255, 255, 255, .02) 1px,
+          transparent 1px,
+          transparent 4px
+        );
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      touch-action: none;
+      filter: saturate(1.1) contrast(1.05) brightness(1.02);
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: rgba(3, 8, 16, .5);
+      backdrop-filter: blur(6px);
+      transition: opacity .2s ease;
+    }
+
+    .overlay.hidden {
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .dialog {
+      width: min(490px, 100%);
+      padding: 28px 28px 24px;
+      border: 1px solid rgba(245, 176, 70, .9);
+      border-radius: 10px;
+      background: rgba(10, 14, 22, .9);
+      box-shadow: 0 0 0 1px rgba(245, 176, 70, .25), 0 18px 48px rgba(0, 0, 0, .48), inset 0 0 20px rgba(245, 176, 70, .08);
+      text-align: center;
+      position: relative;
+    }
+
+    .dialog::before {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border: 1px solid rgba(102, 191, 232, .32);
+      border-radius: 6px;
+      pointer-events: none;
+    }
+
+    .dialog-kicker {
+      color: #72f0d7;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+
+    .dialog h2 {
+      margin: 12px 0 10px;
+      font-size: clamp(22px, 4vw, 30px);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #f7d27d;
+    }
+
+    .dialog p {
+      margin: 0 auto 20px;
+      max-width: 360px;
+      color: #b7c8da;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    button {
+      min-height: 42px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #78ebd4, #64d7ef);
+      color: #051218;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(94, 223, 222, .28);
+      transition: transform .15s ease, filter .15s ease;
+    }
+
+    button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+
+    .mission-panel {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      z-index: 2;
+      min-width: 240px;
+      padding: 12px 14px 10px;
+      border: 1px solid rgba(105, 205, 255, .45);
+      border-radius: 8px;
+      background: rgba(8, 19, 33, .76);
+      box-shadow: inset 0 0 0 1px rgba(110, 205, 255, .08), 0 0 18px rgba(31, 129, 196, .12);
+      backdrop-filter: blur(3px);
+    }
+
+    .mission-panel .panel-title {
+      margin: 0 0 8px;
+      color: #7fe9d4;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .mission-panel ul {
+      list-style: none;
+      margin: 0 0 8px;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+      color: #d8e9ff;
+      font-size: 11px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .panel-note {
+      color: #b5c9e3;
+      font-size: 10px;
+      line-height: 1.5;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      opacity: .9;
+    }
+
+    .mission-panel li {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      opacity: .88;
+    }
+
+    .mission-panel li::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(127, 233, 212, .7);
+      box-shadow: 0 0 10px rgba(127, 233, 212, .6);
+      flex: none;
+    }
+
+    .mission-panel li.done {
+      color: #7de9d2;
+    }
+
+    .mission-panel li.done::before {
+      background: #7de9d2;
+      box-shadow: 0 0 12px rgba(125, 233, 210, .9);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 5px 0;
+      color: #9caecc;
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .key {
+      display: inline-grid;
+      min-width: 23px;
+      height: 22px;
+      place-items: center;
+      margin: 0 2px;
+      padding: 0 5px;
+      border: 1px solid rgba(123, 168, 210, .5);
+      border-radius: 5px;
+      background: rgba(12, 18, 29, .9);
+      color: #e3f7ff;
+      font-size: 10px;
+      font-weight: 700;
+      box-shadow: inset 0 0 0 1px rgba(104, 174, 220, .08);
+    }
+
+    .pulse-note { text-align: right; }
+
+    @media (max-width: 560px) {
+      body { padding: 13px; }
+      .topbar { align-items: start; }
+      .mission-chip { padding: 8px; font-size: 10px; }
+      .hud { grid-template-columns: 1fr 1fr; }
+      .stat { min-width: 0; }
+      .controls { align-items: start; flex-direction: column; gap: 8px; }
+      .pulse-note { text-align: left; }
+      .dialog { padding: 22px 17px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">Orion Recovery Program</div>
+        <h1>Satellite Rescue</h1>
+      </div>
+      <div class="mission-chip"><span class="live-dot"></span> DEEP SPACE · SECTOR 07</div>
+    </header>
+
+    <section class="hud" aria-label="Mission status">
+      <div class="meter">
+        <div class="meter-head">
+          <span class="label">Hull</span>
+          <span class="meter-value" id="pulse-label">READY</span>
+        </div>
+        <div class="bar"><div class="bar-fill" id="pulse-meter"></div></div>
+      </div>
+      <div class="meter">
+        <div class="meter-head">
+          <span class="label">Fuel</span>
+          <span class="meter-value" id="fuel-label">100%</span>
+        </div>
+        <div class="bar"><div class="bar-fill" id="fuel-meter"></div></div>
+      </div>
+      <div class="stat">
+        <span class="label">Timer</span>
+        <span class="stat-value" id="timer">00:00</span>
+      </div>
+      <div class="stat">
+        <span class="label">Lives</span>
+        <span class="stat-value" id="lives">3 / 3</span>
+      </div>
+      <div class="stat">
+        <span class="label">Status</span>
+        <span class="stat-value" id="status">STANDBY</span>
+      </div>
+    </section>
+
+    <div class="arena">
+      <div class="mission-panel" aria-live="polite">
+        <div class="panel-title">Mission Objective</div>
+        <ul id="mission-list">
+          <li id="mission-rescue">Receive distress signal</li>
+          <li id="mission-alien">Eliminate alien threat</li>
+          <li id="mission-satellite">Reach rescue beacon</li>
+        </ul>
+      </div>
+      <canvas id="space" width="1600" height="900" aria-label="Space rescue game. Use arrow keys or WASD to fly."></canvas>
+      <div class="overlay" id="overlay">
+        <div class="dialog">
+          <div class="dialog-kicker" id="dialog-kicker">Incoming transmission</div>
+          <h2 id="dialog-title">A satellite needs you.</h2>
+          <p id="dialog-copy">The ORS-7 research satellite is damaged and drifting. Navigate the asteroid field and reach its rescue zone. Don't let anything slow you down.</p>
+          <button id="start-button" type="button">Launch mission</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="controls">
+      <div>
+        <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span>
+        or <span class="key">↑</span><span class="key">←</span><span class="key">↓</span><span class="key">→</span>
+        to pilot
+      </div>
+      <div class="pulse-note"><span class="key">F</span> Fire laser · uses fuel · asteroids respawn &nbsp; <span class="key">SPACE</span> Stabilizer pulse</div>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById("space");
+      const ctx = canvas.getContext("2d");
+      const overlay = document.getElementById("overlay");
+      const startButton = document.getElementById("start-button");
+      const pulseMeter = document.getElementById("pulse-meter");
+      const pulseLabel = document.getElementById("pulse-label");
+      const fuelMeter = document.getElementById("fuel-meter");
+      const fuelLabel = document.getElementById("fuel-label");
+      const timerLabel = document.getElementById("timer");
+      const statusLabel = document.getElementById("status");
+      const livesLabel = document.getElementById("lives");
+      const W = canvas.width;
+      const H = canvas.height;
+      const worldScale = W / 960;
+      const keys = new Set();
+      const pulseCooldown = 9000;
+      const pulseDuration = 2200;
+      const startingLives = 3;
+      const respawnProtection = 1800;
+      const rescueZone = { x: 1500, y: 450, radius: 95 };
+      const stars = Array.from({ length: 150 }, (_, i) => ({
+        x: (i * 197 + 31) % W,
+        y: (i * 113 + 19) % H,
+        size: i % 9 === 0 ? 1.8 : .7 + (i % 4) * .25,
+        phase: i * .7
+      }));
+      const asteroidLayout = [
+        { x: 230, y: 230, r: 27, vx: .7, vy: .45, phase: .3, palette: ["#7b6f7c", "#a8a4ae", "#3b2c39"], craterBias: .9, ridgeSpread: 1.1 },
+        { x: 330, y: 670, r: 35, vx: -.55, vy: .6, phase: 1.2, palette: ["#6e7e8c", "#a7bcc9", "#2d3645"], craterBias: 1.3, ridgeSpread: 1.4 },
+        { x: 480, y: 450, r: 23, vx: .8, vy: -.5, phase: 2.4, palette: ["#7a6d5a", "#d1b89b", "#43342a"], craterBias: .7, ridgeSpread: 1.0 },
+        { x: 590, y: 180, r: 30, vx: -.65, vy: -.4, phase: 3.1, palette: ["#5f6d77", "#9db1b9", "#283540"], craterBias: 1.1, ridgeSpread: 1.3 },
+        { x: 700, y: 720, r: 24, vx: .45, vy: .72, phase: 4.2, palette: ["#7d6f88", "#ccbad5", "#43334d"], craterBias: .8, ridgeSpread: 1.2 },
+        { x: 820, y: 410, r: 36, vx: -.7, vy: .35, phase: 5.1, palette: ["#697d6b", "#b2cbb1", "#2b3e34"], craterBias: 1.4, ridgeSpread: 1.6 },
+        { x: 940, y: 170, r: 22, vx: .6, vy: .55, phase: 2.8, palette: ["#6c7478", "#9caab1", "#2d3236"], craterBias: .7, ridgeSpread: 1.2 },
+        { x: 1040, y: 700, r: 34, vx: -.45, vy: -.65, phase: 1.8, palette: ["#8d6e5b", "#d7b198", "#4d382f"], craterBias: 1.2, ridgeSpread: 1.4 },
+        { x: 1150, y: 330, r: 26, vx: .7, vy: -.4, phase: 3.8, palette: ["#6d7480", "#b9c0cf", "#2e3646"], craterBias: 1.0, ridgeSpread: 1.3 },
+        { x: 1240, y: 570, r: 38, vx: -.55, vy: .5, phase: 4.8, palette: ["#7a5d5a", "#d3a7a2", "#4f3533"], craterBias: 1.5, ridgeSpread: 1.7 },
+        { x: 1360, y: 190, r: 25, vx: .5, vy: .65, phase: 5.7, palette: ["#5f6875", "#b4bfd3", "#2b3541"], craterBias: .8, ridgeSpread: 1.1 },
+        { x: 1390, y: 760, r: 31, vx: -.65, vy: -.45, phase: .9, palette: ["#6e7369", "#c0d0ba", "#3b4139"], craterBias: 1.1, ridgeSpread: 1.4 }
+      ];
+      let asteroids = [];
+      let laserBolts = [];
+      let asteroidRespawns = [];
+      let nextShotAt = 0;
+      let alien = null;
+      const ship = { x: 92 * worldScale, y: H / 2, vx: 0, vy: 0, angle: 0, radius: 13 * worldScale };
+      let mode = "ready";
+      let startedAt = 0;
+      let elapsed = 0;
+      let fuel = 100;
+      let lives = startingLives;
+      let lastHitAt = -Infinity;
+      let pulseStartedAt = -Infinity;
+      let lastFrame = performance.now();
+      let audioContext = null;
+
+      function playTone({ frequency, endFrequency = frequency, duration, type = "sine", volume = .08, delay = 0 }) {
+        if (!audioContext || audioContext.state !== "running") return;
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        const startAt = audioContext.currentTime + delay;
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, startAt);
+        oscillator.frequency.exponentialRampToValueAtTime(Math.max(1, endFrequency), startAt + duration);
+        gain.gain.setValueAtTime(volume, startAt);
+        gain.gain.exponentialRampToValueAtTime(.001, startAt + duration);
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(startAt);
+        oscillator.stop(startAt + duration);
+      }
+
+      function playSound(kind) {
+        if (kind === "laser") {
+          playTone({ frequency: 780, endFrequency: 260, duration: .11, type: "square", volume: .025 });
+        } else if (kind === "pulse") {
+          playTone({ frequency: 520, endFrequency: 1050, duration: .18, type: "sine", volume: .09 });
+          playTone({ frequency: 260, endFrequency: 520, duration: .24, type: "triangle", volume: .06, delay: .08 });
+        } else if (kind === "success") {
+          playTone({ frequency: 523, endFrequency: 523, duration: .22, volume: .08 });
+          playTone({ frequency: 659, endFrequency: 659, duration: .24, volume: .08, delay: .15 });
+          playTone({ frequency: 784, endFrequency: 784, duration: .4, volume: .08, delay: .3 });
+        } else if (kind === "failure") {
+          playTone({ frequency: 220, endFrequency: 75, duration: .55, type: "sawtooth", volume: .09 });
+          playTone({ frequency: 110, endFrequency: 55, duration: .65, type: "triangle", volume: .07, delay: .12 });
+        }
+      }
+
+      function roundRect(x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, radius);
+      }
+
+      function drawBackground(now) {
+        const gradient = ctx.createRadialGradient(W * .52, H * .5, 10, W * .52, H * .5, W * .8);
+        gradient.addColorStop(0, "#111b35");
+        gradient.addColorStop(1, "#070b18");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, W, H);
+
+        const nebulae = [
+          { x: 300, y: 220, radius: 350, color: "rgba(102, 64, 190, .17)" },
+          { x: 1275, y: 690, radius: 400, color: "rgba(34, 112, 176, .16)" },
+          { x: 783, y: 117, radius: 283, color: "rgba(177, 66, 125, .09)" }
+        ];
+        for (const cloud of nebulae) {
+          const cloudGlow = ctx.createRadialGradient(cloud.x, cloud.y, 0, cloud.x, cloud.y, cloud.radius);
+          cloudGlow.addColorStop(0, cloud.color);
+          cloudGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+          ctx.fillStyle = cloudGlow;
+          ctx.fillRect(cloud.x - cloud.radius, cloud.y - cloud.radius, cloud.radius * 2, cloud.radius * 2);
+        }
+
+        ctx.save();
+        ctx.translate(475, 467);
+        ctx.scale(worldScale, worldScale);
+        ctx.rotate(-.24);
+        ctx.scale(1, .37);
+        const galaxyGlow = ctx.createRadialGradient(0, 0, 5, 0, 0, 145);
+        galaxyGlow.addColorStop(0, "rgba(255, 228, 196, .44)");
+        galaxyGlow.addColorStop(.12, "rgba(199, 174, 255, .22)");
+        galaxyGlow.addColorStop(.42, "rgba(114, 124, 221, .13)");
+        galaxyGlow.addColorStop(1, "rgba(56, 72, 155, 0)");
+        ctx.fillStyle = galaxyGlow;
+        ctx.beginPath();
+        ctx.arc(0, 0, 145, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineCap = "round";
+        for (let arm = 0; arm < 2; arm++) {
+          ctx.save();
+          ctx.rotate(arm * Math.PI);
+          ctx.beginPath();
+          ctx.moveTo(8, 0);
+          ctx.bezierCurveTo(38, -42, 93, -58, 137, -19);
+          ctx.strokeStyle = "rgba(178, 190, 255, .2)";
+          ctx.lineWidth = 15;
+          ctx.shadowColor = "#a8a6ff";
+          ctx.shadowBlur = 22;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(5, 0);
+          ctx.bezierCurveTo(32, -26, 77, -38, 116, -14);
+          ctx.strokeStyle = "rgba(255, 222, 221, .24)";
+          ctx.lineWidth = 3;
+          ctx.shadowBlur = 8;
+          ctx.stroke();
+          ctx.restore();
+        }
+        ctx.fillStyle = "rgba(255, 237, 219, .62)";
+        ctx.shadowColor = "#ffd6bb";
+        ctx.shadowBlur = 18;
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(1020, 450);
+        ctx.scale(worldScale, worldScale);
+        ctx.rotate(-.17);
+        ctx.scale(1, .38);
+        const diskGlow = ctx.createRadialGradient(0, 0, 22, 0, 0, 103);
+        diskGlow.addColorStop(0, "rgba(0, 0, 0, 0)");
+        diskGlow.addColorStop(.37, "rgba(0, 0, 0, 0)");
+        diskGlow.addColorStop(.48, "rgba(255, 229, 176, .92)");
+        diskGlow.addColorStop(.54, "rgba(255, 147, 81, .82)");
+        diskGlow.addColorStop(.68, "rgba(211, 73, 56, .42)");
+        diskGlow.addColorStop(1, "rgba(86, 91, 201, 0)");
+        ctx.fillStyle = diskGlow;
+        ctx.beginPath();
+        ctx.arc(0, 0, 103, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(1020, 450);
+        ctx.scale(worldScale, worldScale);
+        ctx.strokeStyle = "rgba(255, 237, 204, .52)";
+        ctx.lineWidth = 2;
+        ctx.shadowColor = "#ffe2ad";
+        ctx.shadowBlur = 13;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 44, 28, -.17, Math.PI * 1.04, Math.PI * 1.96);
+        ctx.stroke();
+        ctx.fillStyle = "#03040b";
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(180, 194, 255, .3)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 28.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        for (const star of stars) {
+          const twinkle = .45 + (Math.sin(now / 700 + star.phase) + 1) * .25;
+          ctx.globalAlpha = twinkle;
+          ctx.fillStyle = star.size > 1.5 ? "#c7dcff" : "#8296c5";
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * worldScale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        ctx.save();
+        ctx.setLineDash([3, 9]);
+        ctx.strokeStyle = "rgba(117, 145, 201, .08)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, H / 2);
+        ctx.lineTo(W, H / 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawRescueZone(now) {
+        const pulse = Math.sin(now / 450) * 4;
+        ctx.save();
+        ctx.setLineDash([5, 7]);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "rgba(90, 229, 202, .62)";
+        ctx.fillStyle = "rgba(63, 221, 191, .07)";
+        ctx.beginPath();
+        ctx.arc(rescueZone.x, rescueZone.y, rescueZone.radius + pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.scale(worldScale, worldScale);
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#8df1d8";
+        ctx.font = "700 10px Segoe UI, sans-serif";
+        ctx.fillText("RESCUE ZONE", rescueZone.x, rescueZone.y + rescueZone.radius + 20);
+        ctx.restore();
+      }
+
+      function drawSatellite(now) {
+        const flicker = .65 + .35 * Math.sin(now / 170);
+        ctx.save();
+        ctx.translate(rescueZone.x, rescueZone.y);
+        ctx.scale(worldScale, worldScale);
+        ctx.rotate(-.18);
+        ctx.shadowColor = "#ffb765";
+        ctx.shadowBlur = 12 * flicker;
+        ctx.fillStyle = "#f0bd79";
+        ctx.fillRect(-9, -7, 18, 14);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#b1c9ee";
+        ctx.fillRect(-39, -11, 24, 22);
+        ctx.fillRect(15, -11, 24, 22);
+        ctx.strokeStyle = "#60769e";
+        ctx.lineWidth = 1;
+        for (let x = -36; x < -15; x += 7) {
+          ctx.beginPath(); ctx.moveTo(x, -10); ctx.lineTo(x, 10); ctx.stroke();
+        }
+        for (let x = 18; x < 39; x += 7) {
+          ctx.beginPath(); ctx.moveTo(x, -10); ctx.lineTo(x, 10); ctx.stroke();
+        }
+        ctx.strokeStyle = "#9db0d4";
+        ctx.beginPath();
+        ctx.moveTo(0, -7); ctx.lineTo(4, -25); ctx.lineTo(10, -30);
+        ctx.moveTo(-1, 7); ctx.lineTo(-9, 18); ctx.lineTo(-17, 21);
+        ctx.stroke();
+        ctx.fillStyle = "#ff8d7a";
+        ctx.beginPath(); ctx.arc(4, -25, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+
+      function drawAsteroid(rock, now, frozen) {
+        const palette = rock.palette || ["#6d7784", "#a4afc0", "#2b3647"];
+        const glowColor = frozen ? "#9adfff" : "rgba(0, 0, 0, .45)";
+        const sides = 10 + Math.round(rock.r % 5);
+
+        ctx.save();
+        ctx.translate(rock.x, rock.y);
+        ctx.scale(worldScale, worldScale);
+        ctx.rotate(now / 5000 * (rock.phase % 2 ? -1 : 1) + rock.phase);
+
+        const gradient = ctx.createRadialGradient(-rock.r * .5, -rock.r * .5, rock.r * .2, 0, 0, rock.r * 1.7);
+        gradient.addColorStop(0, frozen ? "#dff9ff" : palette[1]);
+        gradient.addColorStop(.38, frozen ? "#9ecae7" : palette[0]);
+        gradient.addColorStop(1, frozen ? "#40556d" : palette[2]);
+
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = frozen ? 18 : 8;
+        ctx.fillStyle = gradient;
+        ctx.strokeStyle = frozen ? "#d3f4ff" : "rgba(222, 233, 247, .8)";
+        ctx.lineWidth = frozen ? 2 : 1.4;
+
+        ctx.beginPath();
+        for (let i = 0; i < sides; i++) {
+          const wobble = 1 + Math.sin(i * 1.7 + rock.phase * 2.4) * (rock.ridgeSpread || 1.2) * .15;
+          const radius = rock.r * wobble * (0.78 + 0.1 * Math.sin(i * 17 + rock.phase));
+          const angle = i / sides * Math.PI * 2;
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(11, 17, 27, .55)";
+        for (let i = 0; i < 4; i++) {
+          const angle = i * 1.7 + rock.phase * 2.3;
+          const startX = Math.cos(angle) * rock.r * (0.25 + i * 0.06);
+          const startY = Math.sin(angle) * rock.r * (0.25 + i * 0.06);
+          const endX = Math.cos(angle + 0.8) * rock.r * (0.82 + (rock.craterBias || 1) * .08);
+          const endY = Math.sin(angle + 0.8) * rock.r * (0.82 + (rock.craterBias || 1) * .08);
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.quadraticCurveTo(
+            (startX + endX) * .5 + Math.cos(angle + 1.4) * rock.r * .17,
+            (startY + endY) * .5 + Math.sin(angle + 1.4) * rock.r * .17,
+            endX,
+            endY
+          );
+          ctx.stroke();
+        }
+
+        for (let i = 0; i < 4; i++) {
+          const craterX = Math.cos(rock.phase + i * 2.8) * rock.r * (.28 + i * .09);
+          const craterY = Math.sin(rock.phase * 1.7 + i * 2.3) * rock.r * (.25 + i * .08);
+          const craterR = rock.r * (.08 + i * .03);
+          ctx.fillStyle = "rgba(7, 12, 22, .34)";
+          ctx.beginPath();
+          ctx.arc(craterX, craterY, craterR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(180, 209, 233, .18)";
+          ctx.beginPath();
+          ctx.arc(craterX - craterR * .18, craterY - craterR * .18, craterR * .45, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.fillStyle = "rgba(255, 250, 233, .2)";
+        ctx.beginPath();
+        ctx.arc(-rock.r * .28, -rock.r * .25, rock.r * .18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawAlien(now) {
+        const aliveAliens = alienShips.filter(item => item.alive);
+        aliveAliens.forEach(item => {
+          const drift = Math.sin(now / 700 + item.phase) * 4;
+          ctx.save();
+          ctx.translate(item.x, item.y + drift);
+          ctx.rotate(item.angle + Math.sin(now / 260) * .5);
+          ctx.scale(worldScale, worldScale);
+
+          ctx.shadowColor = "#ff7d7d";
+          ctx.shadowBlur = 18;
+
+          ctx.fillStyle = "#1d2336";
+          ctx.strokeStyle = "#9ce6ff";
+          ctx.lineWidth = 1.1;
+          ctx.beginPath();
+          ctx.moveTo(-14, 0);
+          ctx.lineTo(-6, -8);
+          ctx.lineTo(2, -12);
+          ctx.lineTo(13, -8);
+          ctx.lineTo(18, 0);
+          ctx.lineTo(12, 9);
+          ctx.lineTo(-2, 12);
+          ctx.lineTo(-8, 8);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = "#4899d0";
+          ctx.beginPath();
+          ctx.moveTo(-10, 2);
+          ctx.lineTo(-2, -6);
+          ctx.lineTo(8, -4);
+          ctx.lineTo(2, 7);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = "#ffcf7e";
+          ctx.shadowColor = "#ffe4a6";
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(-4, 1, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(4, 1, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = "#101922";
+          ctx.beginPath();
+          ctx.arc(-4, 1, .9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(4, 1, .9, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = "rgba(160, 226, 255, .8)";
+          ctx.beginPath();
+          ctx.moveTo(-19, 0);
+          ctx.lineTo(-28, -5);
+          ctx.moveTo(-19, 0);
+          ctx.lineTo(-28, 5);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(18, 0);
+          ctx.lineTo(26, 0);
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+
+      function drawShip(now) {
+        const moving = keys.has("ArrowUp") || keys.has("w") || keys.has("W") ||
+          keys.has("ArrowDown") || keys.has("s") || keys.has("S") ||
+          keys.has("ArrowLeft") || keys.has("a") || keys.has("A") ||
+          keys.has("ArrowRight") || keys.has("d") || keys.has("D");
+        ctx.save();
+        if (now - lastHitAt < respawnProtection && Math.floor(now / 110) % 2 === 0) {
+          ctx.globalAlpha = .3;
+        }
+        ctx.translate(ship.x, ship.y);
+        ctx.rotate(ship.angle);
+        ctx.scale(worldScale, worldScale);
+        if (moving && mode === "playing" && fuel > 0) {
+          const flame = 15 + Math.random() * 9;
+          const flameGradient = ctx.createLinearGradient(-13, 0, -flame, 0);
+          flameGradient.addColorStop(0, "rgba(255, 202, 115, .9)");
+          flameGradient.addColorStop(1, "rgba(255, 112, 99, 0)");
+          ctx.fillStyle = flameGradient;
+          ctx.beginPath();
+          ctx.moveTo(-10, -5); ctx.lineTo(-flame, 0); ctx.lineTo(-10, 5);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.shadowColor = "#63dafa";
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = "#718ba8";
+        ctx.strokeStyle = "#9fc6dc";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-10, -5);
+        ctx.lineTo(-17, -12);
+        ctx.lineTo(-5, -10);
+        ctx.lineTo(8, -4);
+        ctx.lineTo(8, 4);
+        ctx.lineTo(-5, 10);
+        ctx.lineTo(-17, 12);
+        ctx.lineTo(-10, 5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = "#d6e6f2";
+        ctx.strokeStyle = "#78cce0";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(17, 0);
+        ctx.lineTo(7, -5);
+        ctx.lineTo(-7, -7);
+        ctx.lineTo(-12, -5);
+        ctx.lineTo(-15, 0);
+        ctx.lineTo(-12, 5);
+        ctx.lineTo(-7, 7);
+        ctx.lineTo(7, 5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#253f60";
+        ctx.strokeStyle = "#8ce7f5";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(5, -3.6);
+        ctx.lineTo(-3, -4);
+        ctx.lineTo(-8, -2);
+        ctx.lineTo(-8, 2);
+        ctx.lineTo(-3, 4);
+        ctx.lineTo(5, 3.6);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(220, 243, 255, .65)";
+        ctx.lineWidth = .8;
+        ctx.beginPath();
+        ctx.moveTo(-10, -5); ctx.lineTo(-5, -2);
+        ctx.moveTo(-10, 5); ctx.lineTo(-5, 2);
+        ctx.moveTo(7, -4); ctx.lineTo(7, 4);
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffd27c";
+        ctx.beginPath();
+        ctx.arc(-15, -10, 1.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ff7f89";
+        ctx.beginPath();
+        ctx.arc(-15, 10, 1.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#9eeeff";
+        ctx.shadowColor = "#6beaff";
+        ctx.shadowBlur = 7;
+        ctx.fillRect(3, -8, 5, 3);
+        ctx.fillRect(3, 5, 5, 3);
+        ctx.restore();
+      }
+
+      function drawLaserBolts() {
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#b6fbff";
+        ctx.shadowColor = "#43ddff";
+        ctx.shadowBlur = 12;
+        ctx.lineWidth = 4 * worldScale;
+        for (const bolt of laserBolts) {
+          ctx.beginPath();
+          ctx.moveTo(bolt.x - bolt.vx * .025, bolt.y - bolt.vy * .025);
+          ctx.lineTo(bolt.x, bolt.y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function draw(now) {
+        drawBackground(now);
+        drawRescueZone(now);
+        drawSatellite(now);
+        const frozen = now - pulseStartedAt < pulseDuration;
+        asteroids.forEach(rock => drawAsteroid(rock, now, frozen));
+        drawAlien(now);
+        drawLaserBolts();
+        drawShip(now);
+      }
+
+      function updateMissionList() {
+        const missionItems = {
+          rescue: document.getElementById("mission-rescue"),
+          alien: document.getElementById("mission-alien"),
+          satellite: document.getElementById("mission-satellite")
+        };
+        missionItems.rescue.classList.add("done");
+        missionItems.alien.classList.toggle("done", alienShips.every(item => !item.alive));
+        missionItems.satellite.classList.toggle("done", mode === "success");
+      }
+
+      function fireLaser(now) {
+        if (now < nextShotAt || fuel < 2.5) return;
+        const directionX = Math.cos(ship.angle);
+        const directionY = Math.sin(ship.angle);
+        const nose = 20 * worldScale;
+        const boltSpeed = 12 * worldScale;
+        fuel -= 2.5;
+        laserBolts.push({
+          x: ship.x + directionX * nose,
+          y: ship.y + directionY * nose,
+          vx: directionX * boltSpeed + ship.vx,
+          vy: directionY * boltSpeed + ship.vy,
+          expiresAt: now + 1800
+        });
+        nextShotAt = now + 280;
+        playSound("laser");
+      }
+
+      function spawnRespawnedAsteroid(now) {
+        if (asteroidRespawns.length === 0 || asteroidRespawns[0].at > now) return;
+        const { template } = asteroidRespawns.shift();
+        const radius = template.r * worldScale;
+        let position = null;
+        for (let attempt = 0; attempt < 40; attempt++) {
+          const candidate = {
+            x: radius + Math.random() * (W - radius * 2),
+            y: radius + Math.random() * (H - radius * 2)
+          };
+          const clearOfShip = Math.hypot(candidate.x - ship.x, candidate.y - ship.y) > (150 + template.r) * worldScale;
+          const clearOfSatellite = Math.hypot(candidate.x - rescueZone.x, candidate.y - rescueZone.y) > (rescueZone.radius + radius + 45 * worldScale);
+          const clearOfAsteroids = asteroids.every(rock =>
+            Math.hypot(candidate.x - rock.x, candidate.y - rock.y) > (template.r + rock.r + 35) * worldScale
+          );
+          if (clearOfShip && clearOfSatellite && clearOfAsteroids) {
+            position = candidate;
+            break;
+          }
+        }
+        if (!position) {
+          asteroidRespawns.unshift({ at: now + 500, template });
+          return;
+        }
+        const direction = Math.random() * Math.PI * 2;
+        const speed = .35 + Math.random() * .45;
+        asteroids.push({
+          ...template,
+          ...position,
+          vx: Math.cos(direction) * speed,
+          vy: Math.sin(direction) * speed
+        });
+      }
+
+      const alienShips = [];
+
+      function resetAlien() {
+        alienShips.length = 0;
+        const spawnPoints = [
+          { x: 1180, y: 420, vx: 0.9, vy: 0.5 },
+          { x: 1320, y: 260, vx: -0.8, vy: 0.7 },
+          { x: 1260, y: 660, vx: 0.7, vy: -0.8 },
+          { x: 1090, y: 520, vx: -0.9, vy: -0.6 }
+        ];
+        spawnPoints.forEach((point, index) => {
+          alienShips.push({
+            x: point.x,
+            y: point.y,
+            vx: point.vx,
+            vy: point.vy,
+            phase: Math.random() * Math.PI * 2,
+            angle: 0,
+            radius: 22 * worldScale,
+            alive: true,
+            hp: 3,
+            respawnAt: 0,
+            id: index
+          });
+        });
+        alien = alienShips[0] || null;
+      }
+
+      function update(delta, now) {
+        if (mode !== "playing") return;
+        const step = Math.min(delta / 16.67, 2);
+        if (keys.has("f") || keys.has("F")) fireLaser(now);
+        if (!alienShips.length) resetAlien();
+
+        alienShips.forEach((shipAlien) => {
+          if (!shipAlien.alive) {
+            if (now >= shipAlien.respawnAt) {
+              Object.assign(shipAlien, {
+                x: 1100 + Math.random() * 250,
+                y: 170 + Math.random() * 560,
+                vx: (Math.random() > .5 ? 1 : -1) * (0.7 + Math.random() * 0.5),
+                vy: (Math.random() > .5 ? 1 : -1) * (0.5 + Math.random() * 0.5),
+                angle: 0,
+                radius: 22 * worldScale,
+                alive: true,
+                hp: 3,
+                respawnAt: 0
+              });
+            }
+            return;
+          }
+
+          shipAlien.x += shipAlien.vx * worldScale * step;
+          shipAlien.y += shipAlien.vy * worldScale * step;
+          if (shipAlien.x < 80 || shipAlien.x > W - 80) shipAlien.vx *= -1;
+          if (shipAlien.y < 80 || shipAlien.y > H - 80) shipAlien.vy *= -1;
+          shipAlien.angle = Math.atan2(ship.y - shipAlien.y, ship.x - shipAlien.x);
+          if (Math.hypot(ship.x - shipAlien.x, ship.y - shipAlien.y) < ship.radius + shipAlien.radius * .9) {
+            takeHit(now);
+          }
+        });
+
+        let ax = 0;
+        let ay = 0;
+        if (fuel > 0) {
+          if (keys.has("ArrowUp") || keys.has("w") || keys.has("W")) ay -= .19 * worldScale;
+          if (keys.has("ArrowDown") || keys.has("s") || keys.has("S")) ay += .19 * worldScale;
+          if (keys.has("ArrowLeft") || keys.has("a") || keys.has("A")) ax -= .19 * worldScale;
+          if (keys.has("ArrowRight") || keys.has("d") || keys.has("D")) ax += .19 * worldScale;
+          if (ax !== 0 || ay !== 0) fuel = Math.max(0, fuel - delta * .002);
+        }
+
+        ship.vx = (ship.vx + ax * step) * Math.pow(.985, step);
+        ship.vy = (ship.vy + ay * step) * Math.pow(.985, step);
+        const speed = Math.hypot(ship.vx, ship.vy);
+        if (speed > 4.2 * worldScale) {
+          ship.vx = ship.vx / speed * 4.2 * worldScale;
+          ship.vy = ship.vy / speed * 4.2 * worldScale;
+        }
+        ship.x += ship.vx * step;
+        ship.y += ship.vy * step;
+        ship.x = Math.max(18 * worldScale, Math.min(W - 18 * worldScale, ship.x));
+        ship.y = Math.max(18 * worldScale, Math.min(H - 18 * worldScale, ship.y));
+        if (speed > .12) ship.angle = Math.atan2(ship.vy, ship.vx);
+
+        const frozen = now - pulseStartedAt < pulseDuration;
+        for (const rock of asteroids) {
+          if (!frozen) {
+            rock.x += rock.vx * worldScale * step;
+            rock.y += rock.vy * worldScale * step;
+            if (rock.x < rock.r * worldScale || rock.x > W - rock.r * worldScale) rock.vx *= -1;
+            if (rock.y < rock.r * worldScale || rock.y > H - rock.r * worldScale) rock.vy *= -1;
+          }
+          if (now - lastHitAt >= respawnProtection &&
+              Math.hypot(ship.x - rock.x, ship.y - rock.y) < ship.radius + rock.r * worldScale * .78) {
+            takeHit(now);
+            return;
+          }
+        }
+
+        for (let boltIndex = laserBolts.length - 1; boltIndex >= 0; boltIndex--) {
+          const bolt = laserBolts[boltIndex];
+          bolt.x += bolt.vx * step;
+          bolt.y += bolt.vy * step;
+          if (now >= bolt.expiresAt || bolt.x < 0 || bolt.x > W || bolt.y < 0 || bolt.y > H) {
+            laserBolts.splice(boltIndex, 1);
+            continue;
+          }
+          const hitIndex = asteroids.findIndex(rock =>
+            Math.hypot(bolt.x - rock.x, bolt.y - rock.y) < rock.r * worldScale
+          );
+          if (hitIndex !== -1) {
+            const [destroyed] = asteroids.splice(hitIndex, 1);
+            asteroidRespawns.push({ at: now + 3200, template: destroyed });
+            asteroidRespawns.sort((a, b) => a.at - b.at);
+            laserBolts.splice(boltIndex, 1);
+            continue;
+          }
+          const hitAlien = alienShips.find(shipAlien =>
+            shipAlien.alive && Math.hypot(bolt.x - shipAlien.x, bolt.y - shipAlien.y) < shipAlien.radius
+          );
+          if (hitAlien) {
+            hitAlien.hp -= 1;
+            laserBolts.splice(boltIndex, 1);
+            if (hitAlien.hp <= 0) {
+              hitAlien.alive = false;
+              hitAlien.respawnAt = now + 4000;
+              playSound("success");
+            }
+          }
+        }
+        spawnRespawnedAsteroid(now);
+        updateMissionList();
+
+        if (Math.hypot(ship.x - rescueZone.x, ship.y - rescueZone.y) < rescueZone.radius) {
+          finish(true);
+          return;
+        }
+
+        elapsed = now - startedAt;
+        timerLabel.textContent = formatTime(elapsed);
+        fuelMeter.style.width = `${fuel}%`;
+        fuelMeter.style.background = fuel <= 25
+          ? "linear-gradient(90deg, #ff7b70, #ffb16e)"
+          : fuel <= 50 ? "linear-gradient(90deg, #ffc36c, #ffe08c)" : "";
+        fuelLabel.textContent = fuel > 0 ? `${Math.ceil(fuel)}%` : "EMPTY";
+        const cooldownLeft = Math.max(0, pulseCooldown - (now - pulseStartedAt));
+        const available = now - pulseStartedAt >= pulseCooldown;
+        pulseMeter.style.width = `${available ? 100 : (1 - cooldownLeft / pulseCooldown) * 100}%`;
+        pulseLabel.textContent = available ? "READY" : `${(cooldownLeft / 1000).toFixed(1)}s`;
+      }
+
+      function formatTime(milliseconds) {
+        const total = Math.floor(milliseconds / 1000);
+        return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+      }
+
+      function finish(success) {
+        mode = success ? "success" : "failed";
+        playSound(success ? "success" : "failure");
+        statusLabel.textContent = success ? "RESCUED" : "LOST";
+        document.getElementById("dialog-kicker").textContent = success ? "Mission accomplished" : "Signal lost";
+        document.getElementById("dialog-title").textContent = success
+          ? "SATELLITE SUCCESSFULLY RESCUED!"
+          : "MISSION FAILED!";
+        document.getElementById("dialog-copy").textContent = success
+          ? `The ORS-7 satellite is secure. You made the rescue in ${formatTime(elapsed)}. Outstanding work, pilot.`
+          : "Your spacecraft collided with an asteroid. The rescue signal is fading. Reset and try the mission again.";
+        startButton.textContent = "Fly again";
+        overlay.classList.remove("hidden");
+      }
+
+      function takeHit(now) {
+        lives -= 1;
+        livesLabel.textContent = `${lives} / ${startingLives}`;
+        if (lives <= 0) {
+          finish(false);
+          return;
+        }
+        ship.x = 92 * worldScale;
+        ship.y = H / 2;
+        ship.vx = 0;
+        ship.vy = 0;
+        ship.angle = 0;
+        lastHitAt = now;
+      }
+
+      function start() {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioContext = audioContext || new AudioContextClass();
+          if (audioContext.state === "suspended") audioContext.resume();
+        }
+        ship.x = 92 * worldScale; ship.y = H / 2; ship.vx = 0; ship.vy = 0; ship.angle = 0;
+        asteroids = asteroidLayout.map(rock => ({ ...rock }));
+        laserBolts = [];
+        asteroidRespawns = [];
+        nextShotAt = 0;
+        resetAlien();
+        pulseStartedAt = -Infinity;
+        elapsed = 0;
+        fuel = 100;
+        lives = startingLives;
+        lastHitAt = -Infinity;
+        startedAt = performance.now();
+        mode = "playing";
+        statusLabel.textContent = "ACTIVE";
+        pulseLabel.textContent = "READY";
+        pulseMeter.style.width = "100%";
+        fuelMeter.style.width = "100%";
+        fuelMeter.style.background = "";
+        fuelLabel.textContent = "100%";
+        livesLabel.textContent = `${startingLives} / ${startingLives}`;
+        timerLabel.textContent = "00:00";
+        document.getElementById("dialog-kicker").textContent = "Incoming transmission";
+        document.getElementById("dialog-title").textContent = "A satellite needs you.";
+        startButton.textContent = "Launch mission";
+        updateMissionList();
+        overlay.classList.add("hidden");
+      }
+
+      function triggerPulse() {
+        const now = performance.now();
+        if (mode === "playing" && now - pulseStartedAt >= pulseCooldown) {
+          pulseStartedAt = now;
+          playSound("pulse");
+        }
+      }
+
+      window.addEventListener("keydown", event => {
+        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
+        keys.add(event.key);
+        if (event.key === " " && !event.repeat) triggerPulse();
+      });
+      window.addEventListener("keyup", event => keys.delete(event.key));
+      window.addEventListener("blur", () => keys.clear());
+      startButton.addEventListener("click", start);
+
+      function frame(now) {
+        update(now - lastFrame, now);
+        draw(now);
+        lastFrame = now;
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
